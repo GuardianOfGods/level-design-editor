@@ -1,0 +1,23 @@
+{
+  "name": "com.lapua.level-design-editor",
+  "displayName": "Level Design Editor",
+  "description": "Level design tool for Unity",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "category": "tool",
+  "author": {
+    "name": "hoangvanthu",
+    "email": "guardian.of.gods99@gmail.com",
+    "url": "https://github.com/GuardianOfGods"
+  },
+  "license": "MIT",
+  "keywords": [ "unity" ],
+  "dependencies": {
+    "com.unity.inputsystem": "1.7.0",
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:GuardianOfGods/level-design-editor.git",
+    "directory": "Laputa/LevelDesign"
+  },
+}

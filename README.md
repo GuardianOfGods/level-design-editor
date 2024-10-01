@@ -26,7 +26,7 @@ This is a tool for **level design**. Simple and fast spawning objects.
 - Use `Shift + Alt + Mouse Scroll` to **rotate objects**
 
 # How To Install Package
-Add the lines below to `Packages/manifest.json`
+Add the lines below to `Packages/manifest.json` or download in [release](https://github.com/GuardianOfGods/level-design-editor/releases/tag/1.0.0)
 
 For version `1.0.0`
 

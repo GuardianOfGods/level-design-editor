@@ -11,13 +11,15 @@
     "url": "https://github.com/GuardianOfGods"
   },
   "license": "MIT",
-  "keywords": [ "unity" ],
+  "keywords": [
+    "unity"
+  ],
   "dependencies": {
-    "com.unity.inputsystem": "1.7.0",
+    "com.unity.inputsystem": "1.7.0"
   },
   "repository": {
     "type": "git",
     "url": "git@github.com:GuardianOfGods/level-design-editor.git",
     "directory": "Laputa/LevelDesign"
-  },
+  }
 }

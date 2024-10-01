@@ -21,9 +21,9 @@ This is a tool for **level design**. Simple and fast spawning objects.
 
 ![image](https://github.com/user-attachments/assets/2b895389-8e9a-4c99-b1ec-ba8072615620)
 
-- Use `Shift` to preview object in **Scene**
-- Use `Shift + Mouse Scroll` to adjust number of objects
-- Use `Shift + Alt + Mouse Scroll` to rotate objects
+- Use `Shift` to **preview** object in **Scene**
+- Use `Shift + Mouse Scroll` to **adjust number of objects**
+- Use `Shift + Alt + Mouse Scroll` to **rotate objects**
 
 # How To Install Package
 Add the lines below to `Packages/manifest.json`

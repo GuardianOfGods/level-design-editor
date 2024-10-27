@@ -9,6 +9,7 @@ This is a tool for **level design**. Simple and fast spawning objects.
 - [x] Filter folder contain prefabs
 - [x] Work on `Scene Mode` and `Prefab Mode`
 - [x] Work on `2D` and `3D`
+- [x] Filter name for available prefabs
 
 - **If you have any ideas of feature or bugs just request an issue. Here some features i'm working on:**
 - [ ] More setting for rotating, lock position

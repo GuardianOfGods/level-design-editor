@@ -22,6 +22,7 @@ public class LevelEditorWindow : EditorWindow
     private float maxDistance = 1000f;
     private float lastScrollValue = 0f;
     private float scrollThreshold = 0.1f;
+    private string prefabFilter = "";
 
     private Dictionary<GameObject, Texture2D> prefabThumbnails = new Dictionary<GameObject, Texture2D>();
 
@@ -54,71 +55,79 @@ public class LevelEditorWindow : EditorWindow
     }
 
     private void OnGUI()
+{
+    PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+    if (prefabStage != null)
     {
-        PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
-        if (prefabStage != null)
+        // Custom style for centered text and larger font
+        GUIStyle centeredHelpBoxStyle = new GUIStyle(EditorStyles.helpBox)
         {
-            // Custom style for centered text and larger font
-            GUIStyle centeredHelpBoxStyle = new GUIStyle(EditorStyles.helpBox)
-            {
-                alignment = TextAnchor.MiddleCenter, // Center the text
-                fontSize = 14, // Increase font size
-                fontStyle = FontStyle.Bold, // Optional: make the text bold
-                normal = { textColor = Color.green }
-            };
+            alignment = TextAnchor.MiddleCenter, // Center the text
+            fontSize = 14, // Increase font size
+            fontStyle = FontStyle.Bold, // Optional: make the text bold
+            normal = {textColor = Color.green}
+        };
 
-            // Display centered, styled message for Prefab Mode
-            GUILayout.Label($"EDIT IN PREFAB MODE - {prefabStage.prefabContentsRoot.name.ToUpper()}",
-                centeredHelpBoxStyle);
-        }
-        else
-        {
-            Scene sceneStage = SceneManager.GetActiveScene();
-
-            // Custom style for centered text and larger font
-            GUIStyle centeredHelpBoxStyle = new GUIStyle(EditorStyles.helpBox)
-            {
-                alignment = TextAnchor.MiddleCenter, // Center the text
-                fontSize = 14, // Increase font size
-                fontStyle = FontStyle.Bold, // Optional: make the text bold
-                normal = { textColor = Color.green }
-            };
-
-            // Display centered, styled message for Scene Mode
-            GUILayout.Label($"EDIT IN SCENE MODE - {sceneStage.name.ToUpper()}", centeredHelpBoxStyle);
-        }
-
-        // Settings section
-        GUILayout.Label("Settings", EditorStyles.boldLabel);
-        enableHint = EditorGUILayout.Toggle("Show Hints", enableHint);
-
-        // Enum dropdown for 2D/3D Mode
-        editMode = (LevelEditMode)EditorGUILayout.EnumPopup("Edit Mode", editMode);
-
-        // Check if Scene view is in 2D mode when editMode is MouseZ2D
-        if (editMode == LevelEditMode.MouseZ2D)
-        {
-            if (!IsSceneViewIn2DMode())
-            {
-                // Display a warning message if Scene view is not in 2D mode
-                EditorGUILayout.HelpBox(
-                    "Warning: The Scene view is not in 2D mode. Please switch to 2D view to use MouseZ2D mode effectively.",
-                    MessageType.Warning);
-            }
-
-            // Additional setting for Z-axis in 2D mode
-            zAxisPosition = EditorGUILayout.FloatField("Z-Axis Position", zAxisPosition);
-        }
-
-        EditorGUILayout.BeginHorizontal();
-        DrawFoldersList(ref whiteListFolders, "White List Folders");
-        DrawFoldersList(ref blackListFolders, "Black List Folders");
-        EditorGUILayout.EndHorizontal();
-
-        DrawPrefabsGrid();
-
-        DrawSelectedPrefabThumbnail();
+        // Display centered, styled message for Prefab Mode
+        GUILayout.Label($"EDIT IN PREFAB MODE - {prefabStage.prefabContentsRoot.name.ToUpper()}",
+            centeredHelpBoxStyle);
     }
+    else
+    {
+        Scene sceneStage = SceneManager.GetActiveScene();
+
+        // Custom style for centered text and larger font
+        GUIStyle centeredHelpBoxStyle = new GUIStyle(EditorStyles.helpBox)
+        {
+            alignment = TextAnchor.MiddleCenter, // Center the text
+            fontSize = 14, // Increase font size
+            fontStyle = FontStyle.Bold, // Optional: make the text bold
+            normal = {textColor = Color.green}
+        };
+
+        // Display centered, styled message for Scene Mode
+        GUILayout.Label($"EDIT IN SCENE MODE - {sceneStage.name.ToUpper()}", centeredHelpBoxStyle);
+    }
+
+    // Settings section
+    GUILayout.Label("Settings", EditorStyles.boldLabel);
+    enableHint = EditorGUILayout.Toggle("Show Hints", enableHint);
+
+    // Enum dropdown for 2D/3D Mode
+    editMode = (LevelEditMode) EditorGUILayout.EnumPopup("Edit Mode", editMode);
+
+    // Check if Scene view is in 2D mode when editMode is MouseZ2D
+    if (editMode == LevelEditMode.MouseZ2D)
+    {
+        if (!IsSceneViewIn2DMode())
+        {
+            // Display a warning message if Scene view is not in 2D mode
+            EditorGUILayout.HelpBox("Warning: The Scene view is not in 2D mode. Please switch to 2D view to use MouseZ2D mode effectively.", MessageType.Warning);
+        }
+
+        // Additional setting for Z-axis in 2D mode
+        zAxisPosition = EditorGUILayout.FloatField("Z-Axis Position", zAxisPosition);
+    }
+
+    EditorGUILayout.BeginHorizontal();
+    DrawFoldersList(ref whiteListFolders, "White List Folders");
+    DrawFoldersList(ref blackListFolders, "Black List Folders");
+    EditorGUILayout.EndHorizontal();
+    
+    // Search field to filter prefabs by name
+    GUILayout.Label("Filter Prefabs", EditorStyles.boldLabel);
+    prefabFilter = EditorGUILayout.TextField("Search:", prefabFilter);
+
+    DrawPrefabsGrid();
+    DrawSelectedPrefabThumbnail();
+
+    // Add a Refresh button to redraw available prefabs
+    if (GUILayout.Button("Refresh"))
+    {
+        RefreshAvailablePrefabs();
+    }
+}
+    
 
 // Method to check if the Scene view is currently in 2D mode
     private bool IsSceneViewIn2DMode()
@@ -139,7 +148,7 @@ public class LevelEditorWindow : EditorWindow
         if (selectedPrefab != null)
         {
             // Capture the prefab's view with a temporary camera
-            Texture2D preview = GetCachedThumbnail(selectedPrefab, 150, 150);
+            Texture2D preview = GetCachedThumbnail(selectedPrefab, 100, 100);
             // Center both the thumbnail and the text together in a vertical layout
             if (preview != null)
             {
@@ -149,7 +158,7 @@ public class LevelEditorWindow : EditorWindow
                 GUIStyle centeredLabelStyle = new GUIStyle(EditorStyles.boldLabel)
                 {
                     alignment = TextAnchor.MiddleCenter, // Center the text inside the label
-                    normal = { textColor = Color.green }
+                    normal = {textColor = Color.green}
                 };
                 GUILayout.Label(preview, centeredLabelStyle, GUILayout.Width(300), GUILayout.Height(120));
 
@@ -227,7 +236,7 @@ public class LevelEditorWindow : EditorWindow
         EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.5f - 10));
         GUILayout.Label(label, EditorStyles.boldLabel);
 
-        if (GUILayout.Button("Add Folder to " + label))
+        if (GUILayout.Button("Add Folder to " + label,  GUILayout.Height(40)))
         {
             string folderPath = EditorUtility.OpenFolderPanel("Select Folder for " + label, "Assets", "");
             if (!string.IsNullOrEmpty(folderPath) && !foldersList.Contains(folderPath))
@@ -265,9 +274,12 @@ public class LevelEditorWindow : EditorWindow
         GUILayout.Label("Available Prefabs", EditorStyles.boldLabel);
 
         int columnWidth = 110;
-        float availableWidth = position.width - 130;
+        float availableWidth = position.width - columnWidth;
         int columns = Mathf.FloorToInt(availableWidth / columnWidth);
         columns = Mathf.Max(columns, 1);
+
+        // Add scrolling to the prefab grid
+        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
         int rowCount = 0;
         EditorGUILayout.BeginHorizontal();
@@ -284,10 +296,15 @@ public class LevelEditorWindow : EditorWindow
             focused = { background = MakeTex(2, 2, new Color(0, 1, 0, 0.5f)) }
         };
 
-        for (int i = 0; i < availablePrefabs.Count; i++)
+        // Filter prefabs based on the search string
+        var filteredPrefabs = string.IsNullOrEmpty(prefabFilter)
+            ? availablePrefabs
+            : availablePrefabs.FindAll(prefab => prefab.name.ToLower().Contains(prefabFilter.ToLower()));
+
+        for (int i = 0; i < filteredPrefabs.Count; i++)
         {
-            GameObject prefab = availablePrefabs[i];
-            Texture2D preview = GetCachedThumbnail(prefab, 100, 100);
+            GameObject prefab = filteredPrefabs[i];
+            Texture2D preview = GetCachedThumbnail(prefab, 80, 80);
 
             EditorGUILayout.BeginVertical(GUILayout.Width(columnWidth));
 
@@ -313,7 +330,7 @@ public class LevelEditorWindow : EditorWindow
                 float textureWidth = preview.width;
                 float textureHeight = preview.height;
                 float maxDimension = Mathf.Max(textureWidth, textureHeight);
-                float scale = (columnWidth - 20) / maxDimension;
+                float scale = (columnWidth - 10) / maxDimension;
                 float textureX = buttonRect.x + (buttonRect.width - textureWidth * scale) / 2;
                 float textureY = buttonRect.y + (buttonRect.height - textureHeight * scale) / 2;
 
@@ -329,16 +346,17 @@ public class LevelEditorWindow : EditorWindow
             {
                 rowCount = 0;
                 EditorGUILayout.EndHorizontal();
-                GUILayout.Space(20);
+                GUILayout.Space(10);
                 EditorGUILayout.BeginHorizontal();
             }
             else
             {
-                GUILayout.Space(20);
+                GUILayout.Space(10);
             }
         }
 
         EditorGUILayout.EndHorizontal();
+        EditorGUILayout.EndScrollView(); // End the scroll view
     }
 
     private Texture2D MakeTex(int width, int height, Color col)
@@ -353,88 +371,88 @@ public class LevelEditorWindow : EditorWindow
     }
 
     private void OnSceneGUI(SceneView sceneView)
+{
+    if (selectedPrefab == null)
+        return;
+
+    Event e = Event.current;
+    Vector2 mousePosition = e.mousePosition;
+
+    // Determine the world position based on the edit mode
+    Vector3 worldPosition = GetWorldPosition(mousePosition);
+
+    if (e.shift && startLinePosition == null)
     {
-        if (selectedPrefab == null)
-            return;
-
-        Event e = Event.current;
-        Vector2 mousePosition = e.mousePosition;
-
-        // Determine the world position based on the edit mode
-        Vector3 worldPosition = GetWorldPosition(mousePosition);
-
-        if (e.shift && startLinePosition == null)
-        {
-            startLinePosition = worldPosition;
-        }
-
-        if (e.shift && startLinePosition.HasValue)
-        {
-            Handles.color = Color.green;
-            Handles.DrawLine(startLinePosition.Value, worldPosition);
-
-            float scrollValue = Mouse.current.scroll.ReadValue().y;
-
-            if (e.alt)
-            {
-                if (scrollValue > 0)
-                {
-                    previewObjectAngle -= rotationSpeed;
-                }
-                else if (scrollValue < 0)
-                {
-                    previewObjectAngle += rotationSpeed;
-                }
-            }
-            else
-            {
-                if (Mathf.Abs(scrollValue - lastScrollValue) > scrollThreshold)
-                {
-                    if (scrollValue > 0f)
-                    {
-                        previewObjectCount++;
-                    }
-                    else if (scrollValue < 0f && previewObjectCount > 1)
-                    {
-                        previewObjectCount--;
-                    }
-
-                    lastScrollValue = scrollValue;
-                }
-            }
-
-            UpdatePreviewObjects(worldPosition);
-
-            if (e.type == EventType.MouseDown && e.button == 0)
-            {
-                SpawnAllPreviewPrefabs();
-                e.Use();
-            }
-        }
-
-        // Display the hint only if enableHint is true
-        if (enableHint)
-        {
-            Handles.Label(worldPosition + Vector3.up * 0.5f,
-                "Shift + Scroll to adjust count, Shift + Alt + Scroll to rotate, Shift + Click to spawn", new GUIStyle
-                {
-                    fontSize = 12,
-                    normal = new GUIStyleState { textColor = Color.green },
-                    alignment = TextAnchor.MiddleCenter
-                });
-        }
-
-        if (!e.shift)
-        {
-            startLinePosition = null;
-            previewObjectCount = 1;
-            previewObjectAngle = 0;
-            ClearPreviewObjects();
-        }
-
-        sceneView.Repaint();
+        startLinePosition = worldPosition;
     }
 
+    if (e.shift && startLinePosition.HasValue)
+    {
+        Handles.color = Color.green;
+        Handles.DrawLine(startLinePosition.Value, worldPosition);
+
+        float scrollValue = Mouse.current.scroll.ReadValue().y;
+
+        if (e.alt)
+        {
+            if (scrollValue > 0)
+            {
+                previewObjectAngle -= rotationSpeed;
+            }
+            else if (scrollValue < 0)
+            {
+                previewObjectAngle += rotationSpeed;
+            }
+        }
+        else
+        {
+            if (Mathf.Abs(scrollValue - lastScrollValue) > scrollThreshold)
+            {
+                if (scrollValue > 0f)
+                {
+                    previewObjectCount++;
+                }
+                else if (scrollValue < 0f && previewObjectCount > 1)
+                {
+                    previewObjectCount--;
+                }
+
+                lastScrollValue = scrollValue;
+            }
+        }
+
+        UpdatePreviewObjects(worldPosition);
+
+        if (e.type == EventType.MouseDown && e.button == 0)
+        {
+            SpawnAllPreviewPrefabs();
+            e.Use();
+        }
+    }
+
+    // Display the hint only if enableHint is true
+    if (enableHint)
+    {
+        Handles.Label(worldPosition + Vector3.up * 0.5f,
+            "Shift + Scroll to adjust count, Shift + Alt + Scroll to rotate, Shift + Click to spawn", new GUIStyle
+            {
+                fontSize = 12,
+                normal = new GUIStyleState { textColor = Color.green },
+                alignment = TextAnchor.MiddleCenter
+            });
+    }
+
+    if (!e.shift)
+    {
+        startLinePosition = null;
+        previewObjectCount = 1;
+        previewObjectAngle = 0;
+        ClearPreviewObjects();
+    }
+
+    sceneView.Repaint();
+}
+    
     // Method to get world position based on the edit mode
     private Vector3 GetWorldPosition(Vector2 mousePosition)
     {
@@ -472,20 +490,20 @@ public class LevelEditorWindow : EditorWindow
             return worldPosition;
         }
     }
-
+    
     private bool RaycastInPrefabMode(Ray ray, Scene prefabScene, out RaycastHit hit)
     {
         // Create a list to store all hits
         List<RaycastHit> hits = new List<RaycastHit>();
-
+        
         // Get all root game objects in the Prefab Mode scene
         GameObject[] rootObjects = prefabScene.GetRootGameObjects();
-
+    
         foreach (GameObject root in rootObjects)
         {
             // Get all colliders under each root object
             Collider[] colliders = root.GetComponentsInChildren<Collider>();
-
+    
             foreach (Collider collider in colliders)
             {
                 // Perform the raycast against each collider in the Prefab Mode
@@ -495,13 +513,13 @@ public class LevelEditorWindow : EditorWindow
                 }
             }
         }
-
+    
         // Find the closest hit
         if (hits.Count > 0)
         {
             hit = hits[0];
             float closestDistance = hit.distance;
-
+    
             foreach (RaycastHit tempHit in hits)
             {
                 if (tempHit.distance < closestDistance)
@@ -510,10 +528,10 @@ public class LevelEditorWindow : EditorWindow
                     closestDistance = tempHit.distance;
                 }
             }
-
+    
             return true;
         }
-
+    
         // Return false if no hits were found
         hit = new RaycastHit();
         return false;
@@ -634,7 +652,7 @@ public class LevelEditorWindow : EditorWindow
         {
             color = Color.white
         };
-
+        
         Material outlineMaterial = new Material(outlineShader)
         {
             color = Color.white
@@ -642,7 +660,7 @@ public class LevelEditorWindow : EditorWindow
 
         outlineSpriteMaterial.SetFloat("_OutlineSize", 5f);
         outlineSpriteMaterial.SetColor("_OutlineColor", Color.green);
-
+        
         outlineMaterial.SetFloat("_OutlineWidth", 0.001f);
         outlineMaterial.SetColor("_OutlineColor", Color.green);
 
@@ -664,9 +682,9 @@ public class LevelEditorWindow : EditorWindow
 
             renderer.sharedMaterials = combinedMaterials;
         }
-
+        
         MeshRenderer[] meshRenderers = obj.GetComponentsInChildren<MeshRenderer>(true);
-
+        
         foreach (MeshRenderer renderer in meshRenderers)
         {
             Material[] originalMaterials = renderer.sharedMaterials;
@@ -682,6 +700,8 @@ public class LevelEditorWindow : EditorWindow
     private void RefreshAvailablePrefabs()
     {
         availablePrefabs.Clear();
+        prefabThumbnails.Clear();
+
         foreach (string folder in whiteListFolders)
         {
             string[] prefabPaths = Directory.GetFiles(folder, "*.prefab", SearchOption.AllDirectories);
